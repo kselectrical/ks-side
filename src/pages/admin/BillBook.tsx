@@ -19,6 +19,14 @@ export const BillBook: React.FC<BillBookProps> = ({
   const [billSearchQuery, setBillSearchQuery] = useState('');
   const [billStatusFilter, setBillStatusFilter] = useState<'All' | 'Pending' | 'Completed' | 'Cancelled'>('All');
 
+  const getSafeDate = (val: any): Date => {
+    if (!val) return new Date();
+    if (typeof val.toDate === 'function') return val.toDate();
+    if (val.seconds) return new Date(val.seconds * 1000);
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? new Date() : d;
+  };
+
   const handleStatusChange = async (bookingId: string, newStatus: 'Pending' | 'Completed' | 'Cancelled') => {
     const updated = bookings.map(b => {
       if (b.id === bookingId) {
@@ -32,18 +40,19 @@ export const BillBook: React.FC<BillBookProps> = ({
 
   // Calculations
   const totalBilledVal = bookings
-    .filter(b => b.status === 'Completed' || b.status === 'Pending')
-    .reduce((sum, b) => sum + b.subtotal, 0);
+    .filter(b => b && (b.status === 'Completed' || b.status === 'Pending'))
+    .reduce((sum, b) => sum + (b.subtotal || 0), 0);
 
-  const pendingBillsCount = bookings.filter(b => b.status === 'Pending').length;
+  const pendingBillsCount = bookings.filter(b => b && b.status === 'Pending').length;
 
   const filteredBillbook = bookings.filter(b => {
+    if (!b) return false;
     const q = billSearchQuery.toLowerCase().trim();
     const matchesQuery = q === '' ||
-      b.id.toLowerCase().includes(q) ||
-      b.customerName.toLowerCase().includes(q) ||
-      b.phone.includes(q) ||
-      b.address.toLowerCase().includes(q);
+      (b.id || '').toLowerCase().includes(q) ||
+      (b.customerName || '').toLowerCase().includes(q) ||
+      (b.phone || '').includes(q) ||
+      (b.address || '').toLowerCase().includes(q);
       
     const matchesStatus = billStatusFilter === 'All' || b.status === billStatusFilter;
     return matchesQuery && matchesStatus;
@@ -79,7 +88,7 @@ export const BillBook: React.FC<BillBookProps> = ({
           <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-green-100 text-green-700 flex items-center justify-center font-black text-xs sm:text-sm">✓</div>
           <div>
             <span className="text-[8px] sm:text-[9px] text-gray-400 font-black uppercase tracking-wider block">Paid Invoices</span>
-            <span className="text-gray-900 font-black text-sm sm:text-lg">{bookings.filter(b => b.status === 'Completed').length} Paid</span>
+            <span className="text-gray-900 font-black text-sm sm:text-lg">{bookings.filter(b => b && b.status === 'Completed').length} Paid</span>
           </div>
         </div>
       </div>
@@ -159,11 +168,11 @@ export const BillBook: React.FC<BillBookProps> = ({
               </thead>
               <tbody className="divide-y divide-gray-100 text-xs text-gray-700 font-semibold">
                 {filteredBillbook.map((b) => {
-                  const base = Math.round(b.subtotal / 1.18);
-                  const gst = b.subtotal - base;
+                  const base = Math.round((b.subtotal || 0) / 1.18);
+                  const gst = (b.subtotal || 0) - base;
 
                   return (
-                    <tr key={b.id} className="hover:bg-gray-50/40 transition-colors">
+                     <tr key={b.id} className="hover:bg-gray-50/40 transition-colors">
                       {/* ID */}
                       <td className="px-5 py-4 font-black text-gray-950 select-none">
                         {b.id}
@@ -171,9 +180,9 @@ export const BillBook: React.FC<BillBookProps> = ({
                       
                       {/* Date */}
                       <td className="px-5 py-4 select-none">
-                        {new Date(b.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        {getSafeDate(b.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                         <span className="text-[9px] text-gray-400 block font-medium mt-0.5">
-                          {new Date(b.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                          {getSafeDate(b.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </td>
 
@@ -181,13 +190,13 @@ export const BillBook: React.FC<BillBookProps> = ({
                       <td className="px-5 py-4 text-left">
                         <span className="text-gray-900 font-extrabold text-sm block">{b.customerName}</span>
                         <span className="text-gray-600 block text-[10px] mt-0.5">📞 +91 {b.phone}</span>
-                        <span className="text-gray-450 font-medium text-[9px] block truncate max-w-[150px]">📍 {b.address}</span>
+                        <span className="text-gray-455 font-medium text-[9px] block truncate max-w-[150px]">📍 {b.address}</span>
                       </td>
 
                       {/* Items & Brand tags */}
                       <td className="px-5 py-4">
                         <div className="space-y-1 max-w-[200px]">
-                          {b.items.map((item, idx) => (
+                          {(b.items || []).map((item, idx) => (
                             <div key={idx} className="flex items-center text-[9px] font-bold text-gray-600 bg-gray-50 border border-gray-150 rounded px-1.5 py-0.5 w-max max-w-full">
                               <span className="truncate">{item.serviceName}</span>
                               {item.brand && <span className="text-[8px] bg-blue-50 text-brand-blue border border-blue-100 rounded px-1 ml-1 font-black shrink-0">{item.brand}</span>}

@@ -15,6 +15,14 @@ export const Requests: React.FC<RequestsProps> = ({
   handleGenerateInvoice
 }) => {
 
+  const getSafeDate = (val: any): Date => {
+    if (!val) return new Date();
+    if (typeof val.toDate === 'function') return val.toDate();
+    if (val.seconds) return new Date(val.seconds * 1000);
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? new Date() : d;
+  };
+
   const handleStatusChange = async (bookingId: string, newStatus: 'Pending' | 'Completed' | 'Cancelled') => {
     const updated = bookings.map(b => {
       if (b.id === bookingId) {
@@ -28,11 +36,11 @@ export const Requests: React.FC<RequestsProps> = ({
 
   // Stats Calculations
   const totalRevenue = bookings
-    .filter(b => b.status === 'Completed')
-    .reduce((sum, b) => sum + b.subtotal, 0);
+    .filter(b => b && b.status === 'Completed')
+    .reduce((sum, b) => sum + (b.subtotal || 0), 0);
 
   const successRate = bookings.length > 0
-    ? Math.round((bookings.filter(b => b.status === 'Completed').length / bookings.length) * 100)
+    ? Math.round((bookings.filter(b => b && b.status === 'Completed').length / bookings.length) * 100)
     : 100;
 
   return (
@@ -43,21 +51,21 @@ export const Requests: React.FC<RequestsProps> = ({
         <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3 flex items-center space-x-3">
           <div className="w-9 h-9 rounded-lg bg-blue-100 text-brand-blue flex items-center justify-center"><DollarSign size={18} /></div>
           <div>
-            <span className="text-[9px] text-gray-450 font-black uppercase tracking-wider block">Completed Revenue</span>
+            <span className="text-[9px] text-gray-455 font-black uppercase tracking-wider block">Completed Revenue</span>
             <span className="text-gray-900 font-black text-base">₹{totalRevenue}</span>
           </div>
         </div>
         <div className="bg-yellow-50/50 border border-yellow-100 rounded-xl p-3 flex items-center space-x-3">
           <div className="w-9 h-9 rounded-lg bg-yellow-100 text-yellow-600 flex items-center justify-center"><ShoppingBag size={18} /></div>
           <div>
-            <span className="text-[9px] text-gray-450 font-black uppercase tracking-wider block">Total Bookings</span>
+            <span className="text-[9px] text-gray-455 font-black uppercase tracking-wider block">Total Bookings</span>
             <span className="text-gray-900 font-black text-base">{bookings.length} orders</span>
           </div>
         </div>
         <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 flex items-center space-x-3">
           <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center"><ShieldCheck size={18} /></div>
           <div>
-            <span className="text-[9px] text-gray-450 font-black uppercase tracking-wider block">Success Rate</span>
+            <span className="text-[9px] text-gray-455 font-black uppercase tracking-wider block">Success Rate</span>
             <span className="text-gray-900 font-black text-base">{successRate}%</span>
           </div>
         </div>
@@ -86,13 +94,13 @@ export const Requests: React.FC<RequestsProps> = ({
               </thead>
               <tbody className="divide-y divide-gray-100 text-xs text-gray-700 font-medium">
                 {bookings.map((booking) => (
-                  <tr key={booking.id} className="hover:bg-gray-50/40 transition-colors">
+                  <tr key={booking.id} className="hover:bg-gray-55 transition-colors">
                     
                     {/* Booking ID */}
                     <td className="px-5 py-3.5 text-left min-w-[130px] select-none">
                       <span className="text-gray-950 font-black block">{booking.id}</span>
                       <span className="text-[9px] text-gray-455 font-bold block mt-1">
-                        {new Date(booking.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        {getSafeDate(booking.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </td>
 
@@ -108,11 +116,11 @@ export const Requests: React.FC<RequestsProps> = ({
                     {/* Services */}
                     <td className="px-5 py-3.5 text-left min-w-[220px]">
                       <div className="space-y-1">
-                        {booking.items.map((item, idx) => (
+                        {(booking.items || []).map((item, idx) => (
                           <div key={idx} className="flex items-center text-[10px] font-bold text-gray-600 bg-gray-50 border border-gray-150 rounded px-1.5 py-0.5 w-max max-w-full">
                             <span className="truncate">{item.serviceName}</span>
                             {item.brand && <span className="text-[8px] bg-blue-50 text-brand-blue border border-blue-100 rounded px-1 ml-1 font-black shrink-0">{item.brand}</span>}
-                            <span className="text-[9px] text-gray-450 font-black ml-1.5 shrink-0">x{item.quantity}</span>
+                            <span className="text-[9px] text-gray-455 font-black ml-1.5 shrink-0">x{item.quantity}</span>
                           </div>
                         ))}
                       </div>

@@ -113,9 +113,20 @@ const App: React.FC = () => {
 
     loadInitialData();
 
-    // Restore custom customer session from localStorage on mount
+    // Restore sessions from localStorage on mount
+    const savedAdmin = localStorage.getItem('ks_admin_session');
     const savedCustomer = localStorage.getItem('ks_customer_session');
-    if (savedCustomer) {
+
+    if (savedAdmin) {
+      try {
+        const parsed = JSON.parse(savedAdmin);
+        setIsLoggedIn(true);
+        setUserRole('admin');
+        setCurrentUser(parsed);
+      } catch (e) {
+        console.error("Error restoring admin session:", e);
+      }
+    } else if (savedCustomer) {
       try {
         const parsed = JSON.parse(savedCustomer);
         setIsLoggedIn(true);
@@ -229,14 +240,24 @@ const App: React.FC = () => {
   const handleLoginSuccess = (role: 'customer' | 'admin', user?: { name: string; email: string; photoUrl: string; phone?: string }) => {
     setIsLoggedIn(true);
     setUserRole(role);
-    if (user) {
-      setCurrentUser(user);
-      if (role === 'customer') {
-        localStorage.setItem('ks_customer_session', JSON.stringify(user));
+    
+    // Create admin user object if missing
+    const activeUser = user || (role === 'admin' ? {
+      name: 'Kaushindra Singh',
+      email: 'kselectrical004@gmail.com',
+      photoUrl: '/profile.png'
+    } : undefined);
+
+    if (activeUser) {
+      setCurrentUser(activeUser);
+      if (role === 'admin') {
+        localStorage.setItem('ks_admin_session', JSON.stringify(activeUser));
+      } else if (role === 'customer') {
+        localStorage.setItem('ks_customer_session', JSON.stringify(activeUser));
+        saveCustomerToCloud(activeUser).then(() => {
+          getCustomersFromFirestore().then(setCustomers);
+        });
       }
-      saveCustomerToCloud(user).then(() => {
-        getCustomersFromFirestore().then(setCustomers);
-      });
     }
     
     // Close modal immediately and run navigation check
@@ -254,6 +275,7 @@ const App: React.FC = () => {
   const handleLogout = async () => {
     await signOutUser();
     localStorage.removeItem('ks_customer_session');
+    localStorage.removeItem('ks_admin_session');
     setIsLoggedIn(false);
     setUserRole(null);
     setCurrentUser(null);
