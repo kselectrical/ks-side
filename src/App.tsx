@@ -82,6 +82,11 @@ const App: React.FC = () => {
   const [businessConfigState, setBusinessConfigState] = useState<BusinessConfig>(businessConfig);
   const [customers, setCustomers] = useState<CustomerUser[]>([]);
 
+  // Scroll to top automatically on route changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   // Async load data from Firestore database on mount
   useEffect(() => {
     const loadInitialData = async () => {
