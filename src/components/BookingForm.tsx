@@ -85,6 +85,24 @@ export const BookingForm: React.FC<BookingFormProps> = ({
     setDatesArray(list);
   }, []);
 
+  // Restore customer session details on mount
+  useEffect(() => {
+    const savedCustomer = localStorage.getItem('ks_customer_session');
+    if (savedCustomer) {
+      try {
+        const parsed = JSON.parse(savedCustomer);
+        setFormData(prev => ({
+          ...prev,
+          name: parsed.name || '',
+          phone: parsed.phone || '',
+          email: parsed.email && !parsed.email.endsWith('@kselectrical.in') ? parsed.email : ''
+        }));
+      } catch (e) {
+        console.error("Error reading customer session in BookingForm:", e);
+      }
+    }
+  }, []);
+
   const cartItems = Object.values(cart);
   const cartSubtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const finalCalculatedPrice = cartSubtotal + (formData.urgency === 'EMERGENCY' ? 150 : 0);
@@ -124,9 +142,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       errs.phone = 'Please enter a valid 10-digit mobile number.';
     }
 
-    if (!formData.email.trim()) {
-      errs.email = 'Email address is required.';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    // Email is optional (validate only if entered)
+    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       errs.email = 'Enter a valid email address.';
     }
 
@@ -503,46 +520,36 @@ Please dispatch a technician. Thank you!`;
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                   
                   {/* Name */}
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 animate-pulse">
                     <label className="block font-bold text-gray-700 uppercase tracking-wider">
-                      Your Full Name
+                      Your Full Name (Locked)
                     </label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 text-gray-400" size={14} />
                       <input
                         type="text"
+                        disabled
                         placeholder="e.g. Kaushindra Singh"
                         value={formData.name}
-                        onChange={(e) => {
-                          setFormData({ ...formData, name: e.target.value });
-                          if (errors.name) setErrors({ ...errors, name: '' });
-                        }}
-                        className={`w-full bg-white text-gray-800 border pl-9 pr-4 py-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-blue text-sm font-semibold transition-all ${
-                          errors.name ? 'border-red-500 focus:border-red-500' : 'border-gray-250 focus:border-brand-blue'
-                        }`}
+                        className="w-full bg-gray-50 text-gray-550 border border-gray-200 pl-9 pr-4 py-2.5 rounded-lg text-sm font-bold cursor-not-allowed select-none"
                       />
                     </div>
                     {errors.name && <p className="text-[10px] text-red-500 font-semibold">{errors.name}</p>}
                   </div>
 
                   {/* Phone */}
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 animate-pulse">
                     <label className="block font-bold text-gray-700 uppercase tracking-wider">
-                      Mobile Number
+                      Mobile Number (Locked)
                     </label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-3 text-gray-400" size={14} />
                       <input
                         type="tel"
+                        disabled
                         placeholder="e.g. 7895321472"
                         value={formData.phone}
-                        onChange={(e) => {
-                          setFormData({ ...formData, phone: e.target.value });
-                          if (errors.phone) setErrors({ ...errors, phone: '' });
-                        }}
-                        className={`w-full bg-white text-gray-800 border pl-9 pr-4 py-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-blue text-sm font-semibold transition-all ${
-                          errors.phone ? 'border-red-500 focus:border-red-500' : 'border-gray-250 focus:border-brand-blue'
-                        }`}
+                        className="w-full bg-gray-50 text-gray-550 border border-gray-200 pl-9 pr-4 py-2.5 rounded-lg text-sm font-bold cursor-not-allowed select-none"
                       />
                     </div>
                     {errors.phone && <p className="text-[10px] text-red-500 font-semibold">{errors.phone}</p>}
@@ -551,13 +558,13 @@ Please dispatch a technician. Thank you!`;
                   {/* Email */}
                   <div className="space-y-1.5">
                     <label className="block font-bold text-gray-700 uppercase tracking-wider">
-                      Email Address
+                      Email Address (Optional)
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 text-gray-400" size={14} />
                       <input
                         type="email"
-                        placeholder="e.g. kselectrical004@gmail.com"
+                        placeholder="e.g. name@example.com (Optional)"
                         value={formData.email}
                         onChange={(e) => {
                           setFormData({ ...formData, email: e.target.value });
