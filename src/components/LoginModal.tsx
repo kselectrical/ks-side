@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { X, Lock, User, Sparkles, Loader } from 'lucide-react';
-import { signInWithPopup } from 'firebase/auth';
 import { adminCredentials } from '../data';
-import { auth, googleProvider, isFirebaseConfigured, isAdminEmail } from '../firebase';
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLoginSuccess: (role: 'customer' | 'admin', user?: { name: string; email: string; photoUrl: string }) => void;
+  onLoginSuccess: (role: 'customer' | 'admin', user?: { name: string; email: string; photoUrl: string; phone?: string }) => void;
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({
@@ -18,7 +16,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [activeTab, setActiveTab] = useState<'customer' | 'admin'>('customer');
   
   // Customer State
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [isCustomerLoading, setIsCustomerLoading] = useState(false);
 
   // Admin State
   const [adminUser, setAdminUser] = useState('');
@@ -27,43 +27,37 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleGoogleLogin = async () => {
-    setIsGoogleLoading(true);
+  const handleCustomerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (customerName.trim().length < 2) {
+      setError('Please enter a valid name (at least 2 characters).');
+      return;
+    }
+    if (customerPhone.trim().length !== 10) {
+      setError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+
+    setIsCustomerLoading(true);
     setError('');
 
-    if (isFirebaseConfigured && auth && googleProvider) {
-      try {
-        const result = await signInWithPopup(auth, googleProvider);
-        const user = result.user;
-        if (user) {
-          const email = user.email || '';
-          const name = user.displayName || 'Google User';
-          const photoUrl = user.photoURL || '/profile.png';
-          
-          // Check admin status dynamically in admins collection
-          const isAdmin = await isAdminEmail(email);
-          const role = isAdmin ? 'admin' : 'customer';
-          
-          onLoginSuccess(role, { name, email, photoUrl });
-          onClose();
-        }
-      } catch (e: any) {
-        console.error("Firebase Sign-In failed:", e);
-        setError(e.message || "Google Authentication failed.");
-      } finally {
-        setIsGoogleLoading(false);
-      }
-    } else {
-      // Simulate Google Authentication verification (Local Fallback)
-      setTimeout(() => {
-        setIsGoogleLoading(false);
-        onLoginSuccess('customer', {
-          name: 'A (Customer)',
-          email: 'customer@gmail.com',
-          photoUrl: '/profile.png'
-        });
-        onClose();
-      }, 1000);
+    try {
+      const user = {
+        name: customerName.trim(),
+        email: `${customerPhone.trim()}@kselectrical.in`,
+        photoUrl: '/profile.png',
+        phone: customerPhone.trim()
+      };
+
+      onLoginSuccess('customer', user);
+      onClose();
+      
+      setCustomerName('');
+      setCustomerPhone('');
+    } catch (err: any) {
+      setError('Login failed. Please try again.');
+    } finally {
+      setIsCustomerLoading(false);
     }
   };
 
@@ -145,53 +139,76 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         {/* Login Tabs View */}
         <div className="min-h-[190px] flex flex-col justify-between">
           {activeTab === 'customer' ? (
-            /* Customer View: Google Sign In */
-            <div className="space-y-5 py-2">
-              <div className="space-y-1.5">
-                <h3 className="font-extrabold text-gray-900 text-sm leading-snug">
-                  Sign in with Google Account
-                </h3>
-                <p className="text-[11px] text-gray-450 font-semibold leading-normal max-w-xs mx-auto">
-                  Log in to access automated WhatsApp notifications, custom invoice rates, and order history.
-                </p>
+            /* Customer View: Name & Mobile Number Login */
+            <form onSubmit={handleCustomerSubmit} className="space-y-4 py-1 text-left">
+              <div className="space-y-3.5">
+                {/* Full Name */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Your Name</label>
+                  <div className="flex border border-gray-250 rounded-lg overflow-hidden focus-within:border-brand-blue focus-within:ring-1 focus-within:ring-blue-100 transition-all bg-white">
+                    <div className="border-r border-gray-200 px-2.5 py-2 text-gray-400 flex items-center bg-gray-50">
+                      <User size={13} />
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      value={customerName}
+                      onChange={(e) => {
+                        setCustomerName(e.target.value);
+                        if (error) setError('');
+                      }}
+                      placeholder="Enter your name"
+                      className="flex-1 bg-white text-gray-800 text-xs font-semibold px-2.5 py-2 focus:outline-none placeholder-gray-400"
+                    />
+                  </div>
+                </div>
+
+                {/* Mobile Number */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Mobile Number</label>
+                  <div className="flex border border-gray-250 rounded-lg overflow-hidden focus-within:border-brand-blue focus-within:ring-1 focus-within:ring-blue-100 transition-all bg-white">
+                    <div className="border-r border-gray-200 px-2.5 py-2 text-gray-400 flex items-center bg-gray-50">
+                      <span className="text-xs font-bold text-gray-400">+91</span>
+                    </div>
+                    <input
+                      type="tel"
+                      required
+                      pattern="[0-9]{10}"
+                      maxLength={10}
+                      value={customerPhone}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        setCustomerPhone(val);
+                        if (error) setError('');
+                      }}
+                      placeholder="10-digit mobile number"
+                      className="flex-1 bg-white text-gray-800 text-xs font-semibold px-2.5 py-2 focus:outline-none placeholder-gray-400"
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* Google Button */}
+              {error && <p className="text-[10px] text-red-500 font-extrabold text-center animate-shake">{error}</p>}
+
               <button
-                type="button"
-                onClick={handleGoogleLogin}
-                disabled={isGoogleLoading}
-                className="w-full flex items-center justify-center space-x-2.5 bg-white hover:bg-gray-50 border border-gray-250 hover:border-gray-350 shadow-sm rounded-lg py-2.5 px-4 text-xs font-bold text-gray-700 transition-all select-none cursor-pointer active:scale-98"
+                type="submit"
+                disabled={isCustomerLoading}
+                className="w-full bg-brand-blue hover:bg-brand-blue-dark text-white rounded-lg py-2.5 text-xs font-bold uppercase tracking-wider transition-all shadow-sm hover:shadow cursor-pointer select-none active:scale-98 flex items-center justify-center"
               >
-                {isGoogleLoading ? (
-                  <Loader size={16} className="text-brand-blue animate-spin" />
+                {isCustomerLoading ? (
+                  <>
+                    <Loader size={13} className="animate-spin mr-1" />
+                    <span>Signing In...</span>
+                  </>
                 ) : (
-                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.47 15.01 1 12 1 7.35 1 3.4 3.65 1.5 7.5l3.86 3C6.31 7.55 8.94 5.04 12 5.04z"
-                    />
-                    <path
-                      fill="#4285F4"
-                      d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.51h6.46c-.29 1.48-1.14 2.73-2.43 3.58l3.77 2.92c2.2-2.03 3.69-5.01 3.69-8.65z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.36 14.5c-.24-.72-.38-1.49-.38-2.3s.14-1.58.38-2.3L1.5 6.9C.54 8.82 0 10.96 0 13.2s.54 4.38 1.5 6.3l3.86-3z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.77-2.92c-1.11.75-2.53 1.19-4.19 1.19-3.06 0-5.69-2.51-6.64-5.46L1.5 15.9C3.4 19.75 7.35 23 12 23z"
-                    />
-                  </svg>
+                  <span>Login / Register</span>
                 )}
-                <span>{isGoogleLoading ? 'Verifying Google Account...' : 'Continue with Google'}</span>
               </button>
 
-              <p className="text-[10px] text-gray-400 font-semibold leading-normal">
-                By signing in, you agree to receive automated reservation summaries via WhatsApp link.
+              <p className="text-[9px] text-gray-450 font-semibold leading-normal text-center">
+                Your data is fully secure. No OTP required. Same-day service activation.
               </p>
-            </div>
+            </form>
           ) : (
             /* Admin View: Username & Password */
             <form onSubmit={handleAdminSubmit} className="space-y-4 py-1">

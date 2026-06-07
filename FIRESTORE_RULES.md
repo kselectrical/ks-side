@@ -60,10 +60,11 @@ service cloud.firestore {
     }
 
     // 6. Customers Collection
-    // Read/Write: Admins or the owner customer matching their authenticated email
+    // Read: Only administrators (keeps customer names and phone numbers secure)
+    // Write: Anyone (allows new registrations and profile updates)
     match /customers/{email} {
-      allow read: if isAdmin() || (isAuthenticated() && request.auth.token.email == email);
-      allow write: if isAdmin() || (isAuthenticated() && request.auth.token.email == email);
+      allow read: if isAdmin();
+      allow write: if true;
     }
 
     // 7. Audit Logs Collection

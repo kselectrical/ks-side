@@ -107,29 +107,40 @@ const App: React.FC = () => {
     };
 
     loadInitialData();
+
+    // Restore custom customer session from localStorage on mount
+    const savedCustomer = localStorage.getItem('ks_customer_session');
+    if (savedCustomer) {
+      try {
+        const parsed = JSON.parse(savedCustomer);
+        setIsLoggedIn(true);
+        setUserRole('customer');
+        setCurrentUser(parsed);
+      } catch (e) {
+        console.error("Error restoring customer session:", e);
+      }
+    }
   }, []);
 
-  // Monitor Authentication Session Status dynamically
+  // Monitor Authentication Session Status dynamically (Admins Google OAuth)
   useEffect(() => {
     let unsubscribe = () => {};
     if (isFirebaseConfigured && auth) {
       unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
           const email = firebaseUser.email || '';
-          const name = firebaseUser.displayName || 'Google User';
+          const name = firebaseUser.displayName || 'Google Admin';
           const photoUrl = firebaseUser.photoURL || '/profile.png';
           
           const isAdmin = await isAdminEmail(email);
-          const role = isAdmin ? 'admin' : 'customer';
-
-          setIsLoggedIn(true);
-          setUserRole(role);
-          setCurrentUser({ name, email, photoUrl });
-
-          // Sync registered customer records in DB
-          await saveCustomerToCloud({ name, email, photoUrl });
-          const updatedCusts = await getCustomersFromFirestore();
-          setCustomers(updatedCusts);
+          if (isAdmin) {
+            setIsLoggedIn(true);
+            setUserRole('admin');
+            setCurrentUser({ name, email, photoUrl });
+          } else {
+            // Sign out customers from Google Auth to avoid conflicts
+            await auth.signOut();
+          }
         }
       });
     }
@@ -210,11 +221,14 @@ const App: React.FC = () => {
     }
   };
 
-  const handleLoginSuccess = (role: 'customer' | 'admin', user?: { name: string; email: string; photoUrl: string }) => {
+  const handleLoginSuccess = (role: 'customer' | 'admin', user?: { name: string; email: string; photoUrl: string; phone?: string }) => {
     setIsLoggedIn(true);
     setUserRole(role);
     if (user) {
       setCurrentUser(user);
+      if (role === 'customer') {
+        localStorage.setItem('ks_customer_session', JSON.stringify(user));
+      }
       saveCustomerToCloud(user).then(() => {
         getCustomersFromFirestore().then(setCustomers);
       });
@@ -234,6 +248,7 @@ const App: React.FC = () => {
 
   const handleLogout = async () => {
     await signOutUser();
+    localStorage.removeItem('ks_customer_session');
     setIsLoggedIn(false);
     setUserRole(null);
     setCurrentUser(null);

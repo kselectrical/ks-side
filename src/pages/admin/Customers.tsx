@@ -13,14 +13,14 @@ export const Customers: React.FC<CustomersProps> = ({ customers }) => {
       
       <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm select-none">
         <h3 className="font-extrabold text-gray-900 text-sm">Customer Accounts Log Directory</h3>
-        <p className="text-[10px] text-gray-500 font-semibold mt-0.5">Logs all customer users authenticated via Google Sign-In.</p>
+        <p className="text-[10px] text-gray-500 font-semibold mt-0.5">Logs all registered customer profiles.</p>
       </div>
 
       {customers.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-2xl py-16 px-4 text-center shadow-sm select-none">
           <Users size={44} className="text-gray-300 stroke-1 mx-auto" />
           <h3 className="text-gray-900 font-extrabold text-sm mt-3">No customers logged in yet</h3>
-          <p className="text-[10px] text-gray-450 mt-1 max-w-xs mx-auto font-medium">When customers login via Google, their verified details will be logged here.</p>
+          <p className="text-[10px] text-gray-450 mt-1 max-w-xs mx-auto font-medium">When customers log in, their details will be logged here.</p>
         </div>
       ) : (
         <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm text-left">
