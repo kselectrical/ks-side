@@ -71,3 +71,7 @@ export default defineConfig([
   },
 ])
 ```
+
+## Deployment Info
+Last build trigger: 2026-06-07 (Google Actions setup verification)
+
