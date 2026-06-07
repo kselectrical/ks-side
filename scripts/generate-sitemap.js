@@ -90,8 +90,17 @@ function generateSitemap() {
 
   const sitemapPath = path.join(distDir, 'sitemap.xml');
   fs.writeFileSync(sitemapPath, xml);
-  
   console.log(`Sitemap generated successfully at ${sitemapPath}!`);
+
+  // Generate 404.html routing fallback for GitHub Pages
+  const indexPath = path.join(distDir, 'index.html');
+  const fallbackPath = path.join(distDir, '404.html');
+  if (fs.existsSync(indexPath)) {
+    fs.copyFileSync(indexPath, fallbackPath);
+    console.log(`Routing fallback 404.html generated successfully at ${fallbackPath}!`);
+  } else {
+    console.warn(`Warning: index.html not found at ${indexPath}. Could not generate 404.html.`);
+  }
 }
 
 generateSitemap();

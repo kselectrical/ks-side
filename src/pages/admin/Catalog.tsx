@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Edit3, Trash2, Save, Image } from 'lucide-react';
 import type { TechnicalService } from '../../types';
-import { saveServicesToDb } from '../../firebase';
+import { saveServicesToDb, getAssetPath } from '../../firebase';
 
 interface CatalogProps {
   services: TechnicalService[];
@@ -226,7 +226,7 @@ export const Catalog: React.FC<CatalogProps> = ({ services, onUpdateServices }) 
                     }`}
                   >
                     <div className="w-8 h-8 rounded overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center shrink-0">
-                      <img src={preset.path} alt={preset.name} className="w-full h-full object-cover" />
+                      <img src={getAssetPath(preset.path)} alt={preset.name} className="w-full h-full object-cover" />
                     </div>
                     <span className="text-[8px] font-bold mt-1 truncate max-w-full leading-none block">{preset.name}</span>
                   </button>
@@ -315,7 +315,7 @@ export const Catalog: React.FC<CatalogProps> = ({ services, onUpdateServices }) 
                 <tr key={srv.id} className="hover:bg-gray-50/40 transition-colors">
                   <td className="px-5 py-3.5 flex items-center space-x-3 min-w-[280px]">
                     <div className="w-10 h-10 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 shrink-0 select-none">
-                      <img src={srv.imageUrl} alt={srv.name} className="w-full h-full object-cover" />
+                      <img src={getAssetPath(srv.imageUrl)} alt={srv.name} className="w-full h-full object-cover" />
                     </div>
                     <div>
                       <span className="text-gray-900 font-extrabold text-sm block leading-tight">{srv.name}</span>

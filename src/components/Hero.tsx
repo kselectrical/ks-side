@@ -1,5 +1,6 @@
 import React from 'react';
 import { Star, ShieldCheck, Home, Users } from 'lucide-react';
+import { getAssetPath } from '../firebase';
 
 interface HeroProps {
   searchQuery: string;
@@ -120,7 +121,7 @@ export const Hero: React.FC<HeroProps> = ({
               
               <div className="absolute right-[-10px] bottom-[-10px] w-28 h-28 opacity-90 group-hover:scale-105 transition-transform duration-500 shrink-0">
                 <img 
-                  src="/electric_switch.png" 
+                  src={getAssetPath('/electric_switch.png')} 
                   alt="Repair illustration" 
                   className="w-full h-full object-cover rounded-tl-3xl border border-white shadow-md"
                 />
@@ -144,7 +145,7 @@ export const Hero: React.FC<HeroProps> = ({
               {/* Action image replacing generic portrait */}
               <div className="absolute right-[-10px] bottom-[-10px] w-28 h-28 opacity-90 group-hover:scale-105 transition-transform duration-500 shrink-0">
                 <img 
-                  src="/ro_service.png" 
+                  src={getAssetPath('/ro_service.png')} 
                   alt="Technician working" 
                   className="w-full h-full object-cover rounded-tl-3xl border border-white shadow-md"
                 />
@@ -174,7 +175,7 @@ export const Hero: React.FC<HeroProps> = ({
                 className="group relative h-36 rounded-xl overflow-hidden border border-slate-200 cursor-pointer shadow-sm hover:shadow-card hover:-translate-y-1 transition-premium active:scale-98 select-none"
               >
                 <img 
-                  src={cat.img} 
+                  src={getAssetPath(cat.img)} 
                   alt={cat.name} 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 brightness-[0.65]"
                 />

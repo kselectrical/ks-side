@@ -1,5 +1,6 @@
 import React from 'react';
 import { Phone, Mail, MapPin, Star, Award, ShieldAlert } from 'lucide-react';
+import { getAssetPath } from '../firebase';
 import type { BusinessConfig } from '../data';
 
 interface FooterProps {
@@ -20,7 +21,7 @@ export const Footer: React.FC<FooterProps> = ({ businessConfig }) => {
               {/* Profile Photo */}
               <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-800 border border-gray-700 flex items-center justify-center shrink-0">
                 <img 
-                  src={businessConfig.profileUrl} 
+                  src={getAssetPath(businessConfig.profileUrl)} 
                   alt="Kaushindra Singh" 
                   className="w-full h-full object-cover"
                   onError={(e) => {

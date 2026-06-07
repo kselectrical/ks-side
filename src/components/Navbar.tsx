@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Phone, MapPin, ChevronDown, Search, ShoppingCart, Star, User, Settings, LogOut } from 'lucide-react';
 import type { BusinessConfig } from '../data';
+import { getAssetPath } from '../firebase';
 
 interface NavbarProps {
   searchQuery: string;
@@ -65,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center border border-gray-200 shadow-sm transition-transform hover:scale-105">
               <img 
-                src={businessConfig.logoUrl} 
+                src={getAssetPath(businessConfig.logoUrl)} 
                 alt="KS Logo" 
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -245,7 +246,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   /* Customer Profile Info */
                   <div className="flex items-center space-x-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 select-none shadow-sm">
                     <div className="w-5 h-5 rounded-full overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
-                      <img src={currentUser?.photoUrl || '/profile.png'} alt="User" className="w-full h-full object-cover animate-in zoom-in duration-200" />
+                      <img src={currentUser?.photoUrl || getAssetPath('/profile.png')} alt="User" className="w-full h-full object-cover animate-in zoom-in duration-200" />
                     </div>
                     <span className="hidden sm:inline truncate max-w-[100px]">{currentUser?.name || 'Verified'}</span>
                   </div>

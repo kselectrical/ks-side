@@ -4,6 +4,7 @@ import {
   Droplets, Wrench, Settings, ShoppingCart, Plus, Minus, Percent, ShieldCheck, Check
 } from 'lucide-react';
 import type { TechnicalService, CartItem } from '../types';
+import { getAssetPath } from '../firebase';
 import { BrandModal } from './BrandModal';
 import { ServiceDetailsModal } from './ServiceDetailsModal';
 
@@ -249,7 +250,7 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({
                         {/* Image Block & Action Button (Right) */}
                         <div className="relative w-24 h-24 md:w-28 md:h-28 shrink-0 mx-auto sm:mx-0 mt-4 sm:mt-0 ml-0 sm:ml-4 select-none">
                           <img 
-                            src={service.imageUrl} 
+                            src={getAssetPath(service.imageUrl)} 
                             alt={service.name} 
                             className="w-full h-full object-cover rounded-xl border border-gray-200 shadow-sm"
                           />

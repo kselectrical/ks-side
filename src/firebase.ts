@@ -53,6 +53,18 @@ export const isFirebaseConfigured = !!(
   import.meta.env.VITE_FIREBASE_API_KEY
 );
 
+// Asset path resolver for subdirectory hosting (e.g. GitHub Pages)
+export const getAssetPath = (path: string): string => {
+  if (!path) return '';
+  if (path.startsWith('http') || path.startsWith('data:')) return path;
+  
+  const base = import.meta.env.BASE_URL || '/';
+  const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+  
+  return base.endsWith('/') ? `${base}${cleanPath}` : `${base}/${cleanPath}`;
+};
+
+
 // Firebase SDK App Instances
 let app;
 export let db: any = null;
