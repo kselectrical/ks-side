@@ -5,7 +5,8 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { 
   loadServicesFromDb, getBookingsFromCloud, saveBookingToCloud,
   loadBusinessConfigFromDb, saveCustomerToCloud, getCustomersFromFirestore,
-  getInvoicesFromCloud, signOutUser, auth, isFirebaseConfigured, isAdminEmail
+  getInvoicesFromCloud, signOutUser, auth, isFirebaseConfigured, isAdminEmail,
+  runMigrationToFirestore, loadCategoriesFromDb, saveAdminLogToCloud
 } from './firebase';
 import { servicesData, businessConfig } from './data';
 import type { TechnicalService, CartItem } from './types';
@@ -72,9 +73,10 @@ const App: React.FC = () => {
   // Dynamic Authentication State
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<'customer' | 'admin' | null>(null);
-  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; photoUrl: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; photoUrl: string; phone?: string } | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginTriggerSource, setLoginTriggerSource] = useState<'navbar' | 'checkout' | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   // Sync / Real-time Datastores State
   const [services, setServices] = useState<TechnicalService[]>(servicesData);
@@ -91,6 +93,12 @@ const App: React.FC = () => {
   useEffect(() => {
     const loadInitialData = async () => {
       try {
+        // 1. Run migration first
+        await runMigrationToFirestore();
+
+        // 2. Load categories
+        await loadCategoriesFromDb();
+
         const srvs = await loadServicesFromDb(servicesData);
         setServices(srvs);
 
@@ -112,40 +120,17 @@ const App: React.FC = () => {
     };
 
     loadInitialData();
-
-    // Restore sessions from localStorage on mount
-    const savedAdmin = localStorage.getItem('ks_admin_session');
-    const savedCustomer = localStorage.getItem('ks_customer_session');
-
-    if (savedAdmin) {
-      try {
-        const parsed = JSON.parse(savedAdmin);
-        setIsLoggedIn(true);
-        setUserRole('admin');
-        setCurrentUser(parsed);
-      } catch (e) {
-        console.error("Error restoring admin session:", e);
-      }
-    } else if (savedCustomer) {
-      try {
-        const parsed = JSON.parse(savedCustomer);
-        setIsLoggedIn(true);
-        setUserRole('customer');
-        setCurrentUser(parsed);
-      } catch (e) {
-        console.error("Error restoring customer session:", e);
-      }
-    }
   }, []);
 
-  // Monitor Authentication Session Status dynamically (Admins Google OAuth)
+  // Monitor Authentication Session Status dynamically (Admins Google OAuth & Customers Phone Login)
   useEffect(() => {
     let unsubscribe = () => {};
     if (isFirebaseConfigured && auth) {
       unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        setIsAuthLoading(true);
         if (firebaseUser) {
           const email = firebaseUser.email || '';
-          const name = firebaseUser.displayName || 'Google Admin';
+          const name = firebaseUser.displayName || 'User';
           const photoUrl = firebaseUser.photoURL || '/profile.png';
           
           const isAdmin = await isAdminEmail(email);
@@ -153,12 +138,25 @@ const App: React.FC = () => {
             setIsLoggedIn(true);
             setUserRole('admin');
             setCurrentUser({ name, email, photoUrl });
+            await saveAdminLogToCloud(email, 'admin_refresh');
           } else {
-            // Sign out customers from Google Auth to avoid conflicts
-            await auth.signOut();
+            // It is a customer
+            setIsLoggedIn(true);
+            setUserRole('customer');
+            const phone = email.endsWith('@kselectrical.in') ? email.split('@')[0] : '';
+            setCurrentUser({ name, email, photoUrl, phone });
           }
+        } else {
+          setIsLoggedIn(false);
+          setUserRole(null);
+          setCurrentUser(null);
         }
+        setIsAuthLoading(false);
       });
+    } else {
+      setTimeout(() => {
+        setIsAuthLoading(false);
+      }, 0);
     }
     return () => unsubscribe();
   }, []);
@@ -251,9 +249,8 @@ const App: React.FC = () => {
     if (activeUser) {
       setCurrentUser(activeUser);
       if (role === 'admin') {
-        localStorage.setItem('ks_admin_session', JSON.stringify(activeUser));
+        saveAdminLogToCloud(activeUser.email, 'admin_login');
       } else if (role === 'customer') {
-        localStorage.setItem('ks_customer_session', JSON.stringify(activeUser));
         saveCustomerToCloud(activeUser).then(() => {
           getCustomersFromFirestore().then(setCustomers);
         });
@@ -273,9 +270,11 @@ const App: React.FC = () => {
   };
 
   const handleLogout = async () => {
+    const activeEmail = currentUser?.email || 'admin@kselectrical.in';
+    if (userRole === 'admin') {
+      await saveAdminLogToCloud(activeEmail, 'admin_logout');
+    }
     await signOutUser();
-    localStorage.removeItem('ks_customer_session');
-    localStorage.removeItem('ks_admin_session');
     setIsLoggedIn(false);
     setUserRole(null);
     setCurrentUser(null);
@@ -289,10 +288,17 @@ const App: React.FC = () => {
 
   // Tax Invoice PDF Generation Logic
   const handleGenerateInvoice = (booking: BookingData) => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert("Please allow popups in your browser to generate and download dynamic PDF bills.");
-      return;
+    let iframe = document.getElementById('print-invoice-iframe') as HTMLIFrameElement;
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id = 'print-invoice-iframe';
+      iframe.style.position = 'absolute';
+      iframe.style.width = '0px';
+      iframe.style.height = '0px';
+      iframe.style.border = 'none';
+      iframe.style.left = '-9999px';
+      iframe.style.top = '-9999px';
+      document.body.appendChild(iframe);
     }
 
     const totalAmount = booking.subtotal;
@@ -505,14 +511,19 @@ const App: React.FC = () => {
       </html>
     `;
 
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    printWindow.focus();
-    
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 450);
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (iframeDoc) {
+      iframeDoc.open();
+      iframeDoc.write(htmlContent);
+      iframeDoc.close();
+      
+      setTimeout(() => {
+        if (iframe.contentWindow) {
+          iframe.contentWindow.focus();
+          iframe.contentWindow.print();
+        }
+      }, 500);
+    }
   };
 
   // Cart totals
@@ -522,6 +533,15 @@ const App: React.FC = () => {
 
   // Cart checkout bar visibility checks
   const showMobileCartBar = cartCount > 0 && !location.pathname.startsWith('/admin') && location.pathname !== '/checkout';
+
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center font-sans">
+        <div className="w-10 h-10 border-4 border-gray-200 border-t-brand-blue rounded-full animate-spin mb-4"></div>
+        <p className="text-xs font-bold text-gray-550 uppercase tracking-widest animate-pulse">Initializing Security Gate...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-white">

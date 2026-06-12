@@ -19,11 +19,15 @@ export const BillBook: React.FC<BillBookProps> = ({
   const [billSearchQuery, setBillSearchQuery] = useState('');
   const [billStatusFilter, setBillStatusFilter] = useState<'All' | 'Pending' | 'Completed' | 'Cancelled'>('All');
 
-  const getSafeDate = (val: any): Date => {
+  const getSafeDate = (val: unknown): Date => {
     if (!val) return new Date();
-    if (typeof val.toDate === 'function') return val.toDate();
-    if (val.seconds) return new Date(val.seconds * 1000);
-    const d = new Date(val);
+    if (typeof val === 'object' && val !== null && 'toDate' in val && typeof (val as { toDate: unknown }).toDate === 'function') {
+      return (val as { toDate: () => Date }).toDate();
+    }
+    if (typeof val === 'object' && val !== null && 'seconds' in val && typeof (val as { seconds: unknown }).seconds === 'number') {
+      return new Date((val as { seconds: number }).seconds * 1000);
+    }
+    const d = new Date(val as string | number | Date);
     return isNaN(d.getTime()) ? new Date() : d;
   };
 
@@ -133,7 +137,7 @@ export const BillBook: React.FC<BillBookProps> = ({
           <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">Status:</label>
           <select
             value={billStatusFilter}
-            onChange={(e) => setBillStatusFilter(e.target.value as any)}
+            onChange={(e) => setBillStatusFilter(e.target.value as 'All' | 'Pending' | 'Completed' | 'Cancelled')}
             className="flex-1 bg-white text-gray-800 text-xs font-semibold px-3 py-2 border border-gray-250 rounded-lg focus:outline-none focus:border-brand-blue"
           >
             <option value="All">All Invoices</option>

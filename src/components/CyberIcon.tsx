@@ -9,7 +9,7 @@ interface CyberIconProps extends React.ComponentPropsWithoutRef<'svg'> {
 
 export const CyberIcon: React.FC<CyberIconProps> = ({ name, className = '', size = 20, ...props }) => {
   // Safe lookup in Lucide Icons list
-  const IconComponent = (Icons as any)[name] || Icons.HelpCircle;
+  const IconComponent = (Icons as unknown as Record<string, React.ComponentType<{ className?: string; size?: number | string }>>)[name] || Icons.HelpCircle;
   
   return <IconComponent className={className} size={size} {...props} />;
 };

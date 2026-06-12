@@ -46,7 +46,7 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({
 
   // Get first cart item for a service to increment/decrement from the service card
   const getFirstCartItemKey = (serviceId: string) => {
-    const found = Object.entries(cart).find(([_, item]) => item.serviceId === serviceId);
+    const found = Object.entries(cart).find(([, item]) => item.serviceId === serviceId);
     return found ? found[0] : null;
   };
 
@@ -109,8 +109,8 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({
 
   // Calculate cart total details
   const cartItems = Object.entries(cart);
-  const cartSubtotal = cartItems.reduce((sum, [_, item]) => sum + (item.price * item.quantity), 0);
-  const cartCount = cartItems.reduce((sum, [_, item]) => sum + item.quantity, 0);
+  const cartSubtotal = cartItems.reduce((sum, [, item]) => sum + (item.price * item.quantity), 0);
+  const cartCount = cartItems.reduce((sum, [, item]) => sum + item.quantity, 0);
 
   return (
     <section id="services" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 scroll-mt-24 font-sans text-left">

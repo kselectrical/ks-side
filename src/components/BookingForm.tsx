@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock, User, Phone, MapPin, Mail, CheckCircle2, ArrowRight, ArrowLeft, ShieldAlert } from 'lucide-react';
 import type { CartItem } from '../types';
 import type { BusinessConfig } from '../data';
+import { auth, isFirebaseConfigured } from '../firebase';
 
 interface BookingFormProps {
   cart: Record<string, CartItem>;
@@ -62,10 +63,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
-  const [datesArray, setDatesArray] = useState<{ label: string; value: string }[]>([]);
-
-  // Synthesize available service dates (Today + next 4 days)
-  useEffect(() => {
+  const [datesArray] = useState<{ label: string; value: string }[]>(() => {
     const list = [];
     const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -74,33 +72,44 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       const d = new Date();
       d.setDate(d.getDate() + i);
       
-      let label = '';
-      if (i === 0) label = 'Today';
-      else if (i === 1) label = 'Tomorrow';
-      else label = `${weekdays[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]}`;
-      
+      const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : `${weekdays[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]}`;
       const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       list.push({ label, value });
     }
-    setDatesArray(list);
-  }, []);
+    return list;
+  });
+  const [dispatchId, setDispatchId] = useState<number>(0);
 
   // Restore customer session details on mount
   useEffect(() => {
-    const savedCustomer = localStorage.getItem('ks_customer_session');
-    if (savedCustomer) {
-      try {
-        const parsed = JSON.parse(savedCustomer);
+    setTimeout(() => {
+      if (isFirebaseConfigured && auth && auth.currentUser) {
+        const user = auth.currentUser;
+        const email = user.email || '';
+        const phone = email.endsWith('@kselectrical.in') ? email.split('@')[0] : '';
         setFormData(prev => ({
           ...prev,
-          name: parsed.name || '',
-          phone: parsed.phone || '',
-          email: parsed.email && !parsed.email.endsWith('@kselectrical.in') ? parsed.email : ''
+          name: user.displayName || '',
+          phone: phone || '',
+          email: email && !email.endsWith('@kselectrical.in') ? email : ''
         }));
-      } catch (e) {
-        console.error("Error reading customer session in BookingForm:", e);
+      } else {
+        const savedCustomer = localStorage.getItem('ks_customer_session');
+        if (savedCustomer) {
+          try {
+            const parsed = JSON.parse(savedCustomer);
+            setFormData(prev => ({
+              ...prev,
+              name: parsed.name || '',
+              phone: parsed.phone || '',
+              email: parsed.email && !parsed.email.endsWith('@kselectrical.in') ? parsed.email : ''
+            }));
+          } catch (e) {
+            console.error("Error reading customer session in BookingForm:", e);
+          }
+        }
       }
-    }
+    }, 0);
   }, []);
 
   const cartItems = Object.values(cart);
@@ -170,6 +179,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateStep3()) {
+      setDispatchId(Math.floor(Math.random() * 89999 + 10000));
       setStep(4);
 
       // Compile cart item details into a list string
@@ -661,7 +671,7 @@ Please dispatch a technician. Thank you!`;
                   <h3 className="text-lg font-black text-gray-900 tracking-tight leading-none uppercase">
                     Booking Request Sent
                   </h3>
-                  <p className="text-xs text-gray-400 font-bold">DISPATCH_ID: KS-DISP-{Math.floor(Math.random() * 89999 + 10000)}</p>
+                  <p className="text-xs text-gray-400 font-bold">DISPATCH_ID: KS-DISP-{dispatchId || 54321}</p>
                 </div>
 
                 {/* Receipt Card */}

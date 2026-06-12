@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { X, Lock, User, Sparkles, Loader } from 'lucide-react';
 import { adminCredentials } from '../data';
+import { auth, isFirebaseConfigured } from '../firebase';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -42,20 +44,43 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     setError('');
 
     try {
+      const phone = customerPhone.trim();
+      const email = `${phone}@kselectrical.in`;
+      const password = phone;
+      const name = customerName.trim();
+      const photoUrl = '/profile.png';
+
       const user = {
-        name: customerName.trim(),
-        email: `${customerPhone.trim()}@kselectrical.in`,
-        photoUrl: '/profile.png',
-        phone: customerPhone.trim()
+        name,
+        email,
+        photoUrl,
+        phone
       };
+
+      if (isFirebaseConfigured && auth) {
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+        } catch (err) {
+          const authError = err as { code?: string; message?: string };
+          // If the user doesn't exist, register them
+          if (authError.code === 'auth/user-not-found' || authError.code === 'auth/invalid-credential' || authError.code === 'auth/invalid-email') {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            await updateProfile(userCredential.user, { displayName: name });
+          } else {
+            throw err;
+          }
+        }
+      }
 
       onLoginSuccess('customer', user);
       onClose();
       
       setCustomerName('');
       setCustomerPhone('');
-    } catch (err: any) {
-      setError('Login failed. Please try again.');
+    } catch (err) {
+      const authError = err as { message?: string };
+      console.error("Customer Auth failed:", err);
+      setError(authError.message || 'Login failed. Please try again.');
     } finally {
       setIsCustomerLoading(false);
     }

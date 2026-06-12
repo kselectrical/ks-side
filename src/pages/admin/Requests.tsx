@@ -15,11 +15,15 @@ export const Requests: React.FC<RequestsProps> = ({
   handleGenerateInvoice
 }) => {
 
-  const getSafeDate = (val: any): Date => {
+  const getSafeDate = (val: unknown): Date => {
     if (!val) return new Date();
-    if (typeof val.toDate === 'function') return val.toDate();
-    if (val.seconds) return new Date(val.seconds * 1000);
-    const d = new Date(val);
+    if (typeof val === 'object' && val !== null && 'toDate' in val && typeof (val as { toDate: unknown }).toDate === 'function') {
+      return (val as { toDate: () => Date }).toDate();
+    }
+    if (typeof val === 'object' && val !== null && 'seconds' in val && typeof (val as { seconds: unknown }).seconds === 'number') {
+      return new Date((val as { seconds: number }).seconds * 1000);
+    }
+    const d = new Date(val as string | number | Date);
     return isNaN(d.getTime()) ? new Date() : d;
   };
 

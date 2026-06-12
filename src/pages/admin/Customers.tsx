@@ -36,15 +36,15 @@ export const Customers: React.FC<CustomersProps> = ({ customers }) => {
               </thead>
               <tbody className="divide-y divide-gray-100 text-xs text-gray-700 font-semibold">
                 {customers.map((c) => (
-                  <tr key={c.email} className="hover:bg-gray-50/40 transition-colors">
+                  <tr key={c.phone} className="hover:bg-gray-50/40 transition-colors">
                     <td className="px-5 py-4 flex items-center space-x-3">
                       <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-100 border border-gray-200 shrink-0 select-none">
-                        <img src={getAssetPath(c.photoUrl)} alt={c.name} className="w-full h-full object-cover" />
+                        <img src={getAssetPath(c.photoUrl || '/profile.png')} alt={c.name} className="w-full h-full object-cover" />
                       </div>
                       <span className="text-gray-900 font-extrabold text-sm block">{c.name}</span>
                     </td>
                     <td className="px-5 py-4 text-gray-655 font-bold">
-                      {c.email}
+                      {c.email || 'N/A'}
                     </td>
                     <td className="px-5 py-4 text-gray-655 font-bold">
                       {c.phone ? `+91 ${c.phone}` : <span className="text-gray-300 italic">No phone saved</span>}

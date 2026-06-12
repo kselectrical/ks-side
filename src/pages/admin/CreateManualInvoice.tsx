@@ -156,16 +156,19 @@ export const CreateManualInvoice: React.FC<CreateManualInvoiceProps> = ({
       createdAt: new Date().toISOString()
     };
 
-    const updated = [newBooking, ...bookings];
-    onUpdateBookings(updated);
-    await saveInvoiceToCloud(newBooking);
+    try {
+      const updated = [newBooking, ...bookings];
+      onUpdateBookings(updated);
+      await saveInvoiceToCloud(newBooking);
 
-    alert(`Manual invoice ${newBooking.id} created successfully! Triggering PDF printout...`);
+      alert(`Manual invoice ${newBooking.id} created successfully! Opening print dialog...`);
 
-    // Trigger PDF download popup
-    setTimeout(() => {
+      // Trigger PDF download/printout
       handleGenerateInvoice(newBooking);
-    }, 100);
+    } catch (err) {
+      console.error("Failed to save invoice:", err);
+      alert("Failed to save the invoice to cloud database.");
+    }
 
     // Redirect back to bill book page
     navigate('/admin/billbook');
