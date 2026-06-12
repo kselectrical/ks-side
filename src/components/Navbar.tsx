@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Phone, MapPin, ChevronDown, Search, ShoppingCart, Star, User, Settings, LogOut } from 'lucide-react';
+import { Phone, MapPin, ChevronDown, Search, ShoppingCart, Star } from 'lucide-react';
 import type { BusinessConfig } from '../data';
 import { getAssetPath } from '../firebase';
 
@@ -43,12 +43,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   setSelectedLocation,
   cartCount,
   onCartClick,
-  isLoggedIn,
-  userRole,
-  currentUser,
-  onLoginClick,
-  onLogoutClick,
-  onAdminPanelClick,
   businessConfig
 }) => {
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
@@ -233,56 +227,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>Staff Portal</span>
             </a>
 
-            {/* Login / Profile / Admin Widget */}
-            {isLoggedIn ? (
-              <div className="flex items-center space-x-2">
-                {userRole === 'admin' ? (
-                  <>
-                    {/* Admin Dashboard Trigger */}
-                    <button
-                      type="button"
-                      onClick={onAdminPanelClick}
-                      className="flex items-center space-x-1.5 px-3 py-2 bg-red-50 hover:bg-red-100/70 border border-red-200 text-red-700 rounded-lg text-xs font-black select-none cursor-pointer transition-all shadow-sm active:scale-95"
-                    >
-                      <Settings size={13} className="animate-spin-slow" />
-                      <span>Admin Panel</span>
-                    </button>
-                    
-                    {/* Badge */}
-                    <div className="hidden sm:flex items-center px-2 py-2 border border-slate-200 bg-slate-50 rounded-lg text-[10px] font-black text-slate-700 uppercase select-none">
-                      Admin
-                    </div>
-                  </>
-                ) : (
-                  /* Customer Profile Info */
-                  <div className="flex items-center space-x-1.5 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 select-none shadow-sm">
-                    <div className="w-5 h-5 rounded-full overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
-                      <img src={currentUser?.photoUrl || getAssetPath('/profile.png')} alt="User" className="w-full h-full object-cover animate-in zoom-in duration-200" />
-                    </div>
-                    <span className="hidden sm:inline truncate max-w-[100px]">{currentUser?.name || 'Verified'}</span>
-                  </div>
-                )}
 
-                {/* Logout Button */}
-                <button
-                  type="button"
-                  onClick={onLogoutClick}
-                  className="p-2 border border-slate-200 hover:border-red-200 hover:bg-red-50 text-slate-500 hover:text-red-650 rounded-full transition-colors cursor-pointer select-none"
-                  title="Sign Out"
-                >
-                  <LogOut size={14} />
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={onLoginClick}
-                className="flex items-center space-x-1.5 px-3.5 py-2 border border-slate-200 hover:bg-slate-50 rounded-lg text-xs font-bold text-slate-700 transition-colors select-none cursor-pointer shadow-sm hover:scale-102 active:scale-98"
-              >
-                <User size={13} className="text-brand-orange" />
-                <span className="hidden sm:inline">Login</span>
-              </button>
-            )}
 
             {/* Cart Icon Badge */}
             <button
