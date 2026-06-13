@@ -111,7 +111,7 @@ export const Footer: React.FC<FooterProps> = ({ businessConfig }) => {
                 <span>Submit Feedback Review</span>
               </a>
               <a 
-                href="http://ksbilling.lovestoblog.com/"
+                href="https://billing.kselectrical.in/"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center space-x-1.5 text-brand-orange hover:text-white transition-all border border-gray-800 hover:border-gray-700 rounded px-2.5 py-1.5 bg-brand-orange/5 hover:bg-brand-orange/15 font-bold"
