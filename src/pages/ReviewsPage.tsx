@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Star, ShieldCheck, Search, ChevronLeft, ChevronRight, MapPin, Sparkles, AlertCircle } from 'lucide-react';
+import { Star, ShieldCheck, Search, ChevronLeft, ChevronRight, MapPin, Sparkles, AlertCircle, ArrowLeft } from 'lucide-react';
 
 interface Review {
   id: number;
@@ -198,6 +199,18 @@ export const ReviewsPage: React.FC = () => {
         <meta name="description" content="Read verified reviews from 1,000+ happy homeowners in Gaur City, Noida Extension, and Ghaziabad. High-quality AC repair, jet cleaning, house wiring, and appliance services." />
         <meta name="keywords" content="AC repair reviews Noida Extension, electrician testimonials Gaur City, appliance repair reviews Ghaziabad, verified reviews KS Electrical" />
       </Helmet>
+
+      {/* Back to Home Link */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
+        <Link 
+          to="/"
+          className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-500 hover:text-brand-orange uppercase tracking-wider transition-colors cursor-pointer select-none"
+          title="Go back to Home Page"
+        >
+          <ArrowLeft size={13} />
+          <span>Back to Home</span>
+        </Link>
+      </div>
 
       {/* Hero Banner Section */}
       <section className="bg-gradient-to-br from-brand-blue to-brand-blue-dark text-white py-16 px-4 relative overflow-hidden select-none">

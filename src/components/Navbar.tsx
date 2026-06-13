@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Phone, MapPin, ChevronDown, Search, ShoppingCart, Star } from 'lucide-react';
 import type { BusinessConfig } from '../data';
 import { getAssetPath } from '../firebase';
@@ -45,8 +46,18 @@ export const Navbar: React.FC<NavbarProps> = ({
   onCartClick,
   businessConfig
 }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const handleLogoClick = () => {
+    if (location.pathname === '/') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      navigate('/');
+    }
+  };
 
   return (
     <nav className="fixed top-0 left-0 w-full bg-white/95 backdrop-blur-md border-b border-gray-200 z-50 shadow-sm transition-all duration-300">
@@ -55,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           
           {/* Logo & Brand Name */}
           <div 
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            onClick={handleLogoClick}
             className="flex items-center space-x-2.5 cursor-pointer select-none shrink-0"
           >
             <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center border border-gray-200 shadow-sm transition-transform hover:scale-105">
