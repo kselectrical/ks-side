@@ -31,6 +31,7 @@ const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then(m => ({ defaul
 const TermsPage = lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })));
 const LocalLandingPage = lazy(() => import('./pages/LocalLandingPage'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const ReviewsPage = lazy(() => import('./pages/ReviewsPage'));
 
 // Service Pages - Lazy loaded
 const ACService = lazy(() => import('./pages/services/ACService'));
@@ -661,6 +662,7 @@ const App: React.FC = () => {
             } />
 
             {/* Informational Pages */}
+            <Route path="/reviews" element={<ReviewsPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage businessConfig={businessConfigState} />} />
             <Route path="/faq" element={<FAQPage />} />

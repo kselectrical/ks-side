@@ -193,17 +193,18 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Column: Quick Contacts, Reviews & Shopping Cart */}
           <div className="flex items-center space-x-4 shrink-0">
-            {/* Google Rating Badge */}
+            {/* Reviews Badge */}
             <a 
-              href={businessConfig.reviewLink}
+              href="/reviews"
               target="_blank"
               rel="noopener noreferrer"
               className="hidden lg:flex items-center space-x-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 transition-colors select-none"
+              title="View 1000+ Verified Customer Reviews"
             >
               <Star size={12} fill="#F97316" className="text-brand-orange shrink-0" />
               <span className="font-extrabold text-slate-900">4.9</span>
               <span className="text-slate-300">|</span>
-              <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Google Rating</span>
+              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">1000+ Reviews</span>
             </a>
 
             {/* Direct Calls - Stronger Orange CTA */}

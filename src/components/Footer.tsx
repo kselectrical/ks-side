@@ -147,13 +147,13 @@ export const Footer: React.FC<FooterProps> = ({ businessConfig }) => {
             <ul className="flex flex-col space-y-2.5 text-xs font-semibold">
               <li>
                 <a 
-                  href={businessConfig.reviewLink} 
+                  href="/reviews" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  title="Read customer reviews and ratings"
+                  title="Read 1000+ verified customer reviews and ratings"
                   className="text-gray-400 hover:text-white transition-colors"
                 >
-                  Google reviews
+                  1000+ Customer reviews
                 </a>
               </li>
               <li>
