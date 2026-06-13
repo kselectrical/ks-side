@@ -230,7 +230,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Staff Portal Button */}
             <a 
-              href="https://billing.kselectrical.in/"
+              href="https://ksbilling.lovestoblog.com/"
               target="_blank"
               rel="noopener noreferrer"
               className="hidden md:flex items-center space-x-1.5 px-3.5 py-2.5 bg-slate-900 hover:bg-brand-blue-dark text-white hover:text-brand-orange rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 hover:scale-102 select-none border border-slate-800"

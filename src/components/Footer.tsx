@@ -180,7 +180,7 @@ export const Footer: React.FC<FooterProps> = ({ businessConfig }) => {
               </li>
               <li>
                 <a 
-                  href="https://billing.kselectrical.in/" 
+                  href="https://ksbilling.lovestoblog.com/" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   title="Open Billing Portal / Staff Portal"
